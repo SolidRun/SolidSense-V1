@@ -30,6 +30,9 @@ import org.eclipse.kura.net.admin.modem.telit.le910v2.TelitLe910v2ModemFactory;
 import org.eclipse.kura.net.admin.modem.ublox.generic.UbloxModemFactory;
 import org.eclipse.kura.net.admin.modem.quectel.ec25.QuectelEC25ModemFactory;
 import org.eclipse.kura.net.admin.modem.quectel.ec25.QuectelEC25ConfigGenerator;
+import org.eclipse.kura.net.admin.modem.quectel.bg96.QuectelBG96ModemFactory;
+import org.eclipse.kura.net.admin.modem.quectel.bg96.QuectelBG96ConfigGenerator;
+
 
 public class SupportedUsbModemsFactoryInfo {
 
@@ -48,6 +51,7 @@ public class SupportedUsbModemsFactoryInfo {
         Sierra_USB598(SupportedUsbModemInfo.Sierra_USB598, SierraUsb598ModemFactory.class, SierraUsb598ConfigGenerator.class),
         Ublox_SARA_U2(SupportedUsbModemInfo.Ublox_SARA_U2, UbloxModemFactory.class, HspaModemConfigGenerator.class),
         Quectel_EC25(SupportedUsbModemInfo.Quectel_EC25, QuectelEC25ModemFactory.class, QuectelEC25ConfigGenerator.class);
+		Quectel_BG96(SupportedUsbModemInfo.Quectel_BG96, QuectelBG96ModemFactory.class, QuectelBG96ConfigGenerator.class);
 
         private final SupportedUsbModemInfo m_usbModemInfo;
         private final Class<? extends CellularModemFactory> m_factoryClass;
