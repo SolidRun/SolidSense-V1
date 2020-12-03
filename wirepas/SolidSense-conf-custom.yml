@@ -1,0 +1,125 @@
+#
+#  Custom template file for SolidSense provisioning
+#
+#   Wirepas configuration with 2 sinks enabled
+#   ==========================================
+#    This file drives the following configuration
+#   Network
+#   ========
+#   Default
+#
+#   Wirepas
+#   =======
+#   sink1 intercative
+#   sink2 interactive
+#   transport1 interactive
+#   All configurations via KURA
+#
+#
+#  Copyright Sterwen-Technology/SolidRun 2019-2020
+#
+#  **********************************************************
+#  *    WARNING                                             *
+#  * There is no consistency/ vaidity checks for parameters *
+#  * Changing any parameter will require test before        *
+#  * Any Filed application                                  *
+#  **********************************************************
+#
+#   state is used for activable services (pure data services don't need one)
+#   disabled    the service will not be configured and and started
+#   auto        the service is configured but the start and activation is done by another process or context dependant
+#   interactive the service configuration is to be done via Kura
+#   active      the service is configured and activared during provisioning
+#
+#   override    (true by default) replace the default service definition, false, combine both definitions
+#
+# Global variable definition
+#
+gateway:
+
+    snapshot_0: snapshot_0-full.xml #this is the template snapshot do not change it unless full test
+    WP_TEST_ID: 10450204
+    WP_TEST_CHANNEL: 10
+    
+    
+    
+#######################################################
+#                Services definition
+#######################################################
+services:        
+#
+#   Wirepas services => enable only if Wirepas is to be used
+#   And if the right firmware has been flashed in the Nordic chips (sink)
+#
+#   Variables are here for reference and example and are not used in interactive mode
+#
+        
+- service:
+    type: WirepasSink
+    name: sink1
+    state: active
+    parameters:
+        configuration: WirepasSinkConfigurationService
+        plugin: WirepasConfigurationService.dp
+        plugin_name: WirepasConfigurationService
+        system: wirepasSink1
+        port: ttymxc1       # physical port
+        start: true
+        
+    variables:
+        NETWORK_ID: $WP_TEST_ID
+        NETWORK_CHANNEL: $WP_TEST_CHANNEL
+        ADDRESS: $UNIQUE_ADDRESS0
+    properties:
+        sinkAddress: $ADDRESS
+        networkChannel: $NETWORK_CHANNEL
+        networkAddress: $NETWORK_ID
+        sinkName: $service_name
+
+- service:
+    type: WirepasSink
+    name: sink2
+    state: active
+    parameters:
+        configuration: WirepasSinkConfigurationService
+        plugin: WirepasConfigurationService.dp
+        plugin_name: WirepasConfigurationService 
+        system: wirepasSink2
+        port: ttymxc2
+        start: true
+        
+    variables:
+        NETWORK_ID: $WP_TEST_ID
+        NETWORK_CHANNEL: $WP_TEST_CHANNEL
+        ADDRESS: $UNIQUE_ADDRESS1
+    properties:
+        sinkAddress: $ADDRESS
+        networkChannel: $NETWORK_CHANNEL
+        networkAddress: $NETWORK_ID
+        sinkName: $service_name
+        
+- service:
+    type: WirepasTransport
+    name: wirepas-cloud
+    state: interactive
+    parameters:
+        configuration: WirepasConfigurationService
+        plugin: WirepasConfigurationService.dp
+        plugin_name: WirepasConfigurationService
+        system: wirepasTransport1
+        prefix: transportA
+        # customId:
+    variables:
+        ENABLE: false
+        SECURE: false
+        ADDRESS: YOUR_BROKER_URL
+        PORT: 1883
+        USER: YOUR_BROKER_USER
+        PASSWORD: YOUR_BROKER_PASSWD
+    properties:
+        enabled: $ENABLE
+        secured: $SECURE
+        address: $ADDRESS
+        user: $USER
+        port: $PORT
+        passwd: $PASSWORD

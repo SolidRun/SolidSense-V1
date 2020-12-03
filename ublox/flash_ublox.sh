@@ -13,7 +13,6 @@ FILENAME=""
 MAC=""
 STATUS_CHECK_MAC="0"
 STATUS_TYPE="0"
-DEVICE="b1"
 
 # Functions
 openocd_create_cfg_file () {
@@ -191,93 +190,6 @@ openocd_set_mac () {
 	openocd_uicr_load
 }
 
-determine_hardware () {
-	type="$(tr -d '\000' < /proc/device-tree/model)"
-	case "${type}" in
-		"SolidRun HummingBoard2 Solo/DualLite (1.5som+emmc)" )
-			hardware="n6gsdl"
-			;;
-		"SolidRun HummingBoard2 Dual/Quad (1.5som+emmc)" )
-			hardware="n6gq"
-			;;
-		"SolidRun SolidSense IN6 Solo/DualLite (1.5som+emmc)" )
-			hardware="in6gsdl"
-			;;
-		"SolidRun SolidSense IN6 Dual/Quad (1.5som+emmc)" )
-			hardware="in6gq"
-			;;
-		* )
-			hardware="UNKNOWN"
-			;;
-	esac
-
-	echo "${hardware}"
-}
-
-determine_swds () {
-	hardware=$(determine_hardware)
-	case "${hardware}" in
-		n6gsdl|n6gq )
-			case "${1}" in
-				1|sink1 )
-					SWD="82 81"
-					;;
-				2|sink2 )
-					SWD="59 125"
-					;;
-				* )
-					SWD="UNKNOWN"
-					;;
-			esac
-			;;
-		in6gsdl|in6gq )
-			case "${1}" in
-				1|sink1 )
-					SWD="64 65"
-					;;
-				2|sink2 )
-					SWD="UNKNOWN"
-					;;
-				* )
-					SWD="UNKNOWN"
-					;;
-			esac
-			;;
-		UNKNOWN )
-			echo "Hardware type <${hardware}> not found!"
-			exit 1
-			;;
-		* )
-			echo "Hardware type <${hardware}> not found!"
-			exit 1
-			;;
-	esac
-
-	echo "${SWD}"
-}
-
-determine_offset () {
-	device="${1}"
-
-	case "${device}" in
-		b1|B1 )
-			FLASH_OFFSET="0x8000"
-			;;
-		b3|B3 )
-			FLASH_OFFSET="0xc000"
-			;;
-		UNKNOWN )
-			echo "Device type <${hardware}> not found!"
-			FLASH_OFFSET="UNKNOWN"
-			;;
-		* )
-			echo "Device type <${hardware}> not found!"
-			FLASH_OFFSET="UNKNOWN"
-			;;
-	esac
-	echo "${FLASH_OFFSET}"
-}
-
 cleanup () {
 	if [ -f "${OCD_CFG_FILE}" ]; then
 		rm -f "${OCD_CFG_FILE}"
@@ -295,19 +207,18 @@ cleanup () {
 }
 
 usage () {
-	echo "$(basename "${0}"): firmware                   : Firmware image to flash"
-	echo "    -s|--sink                                  : Sink <1|2>"
-	echo "    -d|--device                                : Nina <b1|B1> or Nina <b3|B3>"
+	echo "$(basename "${0}"):"
+	echo "    -s|--sink <sink: 1|2>                      : mandatory option"
 	echo "    -m|--mac-check                             :"
 	echo "    -M|--mac-set <MAC Address>                 : example: 0a:01:02:03:04:05"
-	echo "    -t|--type                                  : type to flash <boot|program|wirepas>"
+	echo "    -t|--type <type: boot|program|wirepas>     :"
 	echo "    <FILE>                                     : file to flash"
 	echo ""
-	echo "	example: $(basename "${0}") -s1 -db1 -tboot blehci-boot-1.2.0.bin"
+	echo "	example: $(basename "${0}") -s1 -tboot blehci-boot-1.2.0.bin"
 	exit 1
 }
 
-options=$(getopt -l "help,mac-check,mac-set:,sink:,device:,type:" -o ":hmM:s:d:t:" -- "${@}")
+options=$(getopt -l "help,mac-check,mac-set:,sink:,type:" -o ":hmM:s:t:" -- "${@}")
 eval set -- "${options}"
 
 while true
@@ -325,20 +236,27 @@ do
 			;;
 		-s|--sink )
 			shift
-			OCD_SWD_NUMS=$(determine_swds "${1}")
-			if [ "${OCD_SWD_NUMS}" = "UNKNOWN" ]; then
-				echo "Unknown sink device <${1}>!"
+			if [ "${1}" = "1" ]; then
+				OCD_SWD_NUMS="82 81"
+			elif [ "${1}" = "2" ]; then
+				OCD_SWD_NUMS="59 125"
+			else
 				usage
 			fi
-			;;
-		-d|--device )
-			shift
-			DEVICE="${1}"
 			;;
 		-t|--type )
 			shift
 			STATUS_TYPE="1"
 			TYPE="${1}"
+			if [ "${1}" = "boot" ]; then
+				FLASH_OFFSET="0x0"
+			elif [ "${1}" = "program" ]; then
+				FLASH_OFFSET="0x8000"
+			elif [ "${1}" = "wirepas" ]; then
+				FLASH_OFFSET=""
+			else
+				usage
+			fi
 			;;
 		\? )
 			usage
@@ -393,24 +311,6 @@ if [ "${STATUS_TYPE}" = "1" ]; then
 	else
 		FILENAME="${1}"
 		if [ -f "${FILENAME}" ]; then
-			case "${TYPE}" in
-				boot )
-					FLASH_OFFSET="0x0"
-					;;
-				program )
-					FLASH_OFFSET="$(determine_offset "${DEVICE}")"
-					;;
-				wirepas )
-					FLASH_OFFSET=""
-					;;
-				* )
-					echo "Unknown type <${TYPE}> not found!"
-					openocd_reset_run
-					openocd_shutdown
-					cleanup
-					exit 1
-					;;
-			esac
 			openocd_load
 		else
 			echo "The <${FILENAME}> does not exist!"

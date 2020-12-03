@@ -241,9 +241,9 @@ services:
         system: solidsense_mqtt
         prefix: transport
     variables:
-        ENABLE: True
+        ENABLE: false           #change following issue 630
         SECURE: False
-        ADDRESS: 192.168.1.12
+        ADDRESS: TO_BE_CONFIGURED
         PORT: 1883
         USER: solidsense
         PASSWORD: solidsense
@@ -319,7 +319,7 @@ services:
         prefix: transportA
         # customId:
     variables:
-        ENABLE: True
+        ENABLE: false # to avoid permanent reties on wrong address
         SECURE: True
         ADDRESS: YOUR_BROKER_URL
         PORT: 8883
